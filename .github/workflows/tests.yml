@@ -30,9 +30,7 @@ jobs:
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
-          if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
-            curl -L -o ffmpeg.7z https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-5.1.2-full_build-shared.7z
-          else
+          curl -L -o ffmpeg.7z https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-5.1.2-full_build-shared.7z
             conda install -q -n pyav ffmpeg=${{ matrix.config.ffmpeg }}
           fi
 
