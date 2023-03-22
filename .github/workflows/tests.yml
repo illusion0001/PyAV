@@ -42,9 +42,9 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         if [[ "${{ matrix.config.ffmpeg }}" != "4.3" ]]; then
-          7z x ffmpeg.7z -o$CONDA_PREFIX/Library/ 
+          7z x ffmpeg.7z -r -o$CONDA_PREFIX/Library/ ffmpeg-5.1.2-full_build-shared\
         fi
-        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library ffmpeg-5.1.2-full_build-shared\*
+        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
 
     - name: Test
       shell: bash
