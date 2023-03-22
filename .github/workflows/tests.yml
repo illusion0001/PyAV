@@ -38,7 +38,7 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         7z x ffmpeg.7z -r -o$CONDA_PREFIX/Library/
-        mv -rv $CONDA_PREFIX/Library/ffmpeg-5.1.2-full_build-shared/ $CONDA_PREFIX/Library/
+        mv -v $CONDA_PREFIX/Library/ffmpeg-5.1.2-full_build-shared/ $CONDA_PREFIX/Library/
         ls $CONDA_PREFIX/Library
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library/
 
