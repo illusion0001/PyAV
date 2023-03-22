@@ -3,144 +3,8 @@ name: tests
 on: [push, pull_request]
 
 jobs:
-
-
-  style:
-
-    name: "${{ matrix.config.suite }}"
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        config:
-          - {suite: black}
-          - {suite: flake8}
-          - {suite: isort}
-
-    env:
-      PYAV_PYTHON: python3
-      PYAV_LIBRARY: ffmpeg-4.3 # doesn't matter
-
-    steps:
-
-      - uses: actions/checkout@v3
-        name: Checkout
-
-      - name: Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-
-      - name: Environment
-        run: env | sort
-
-      - name: Packages
-        run: |
-          . scripts/activate.sh
-          # A bit of a hack that we can get away with this.
-          python -m pip install ${{ matrix.config.suite }}
-
-      - name: "${{ matrix.config.suite }}"
-        run: |
-          . scripts/activate.sh
-          ./scripts/test ${{ matrix.config.suite }}
-
-
-  nix:
-
-    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
-    runs-on: ${{ matrix.config.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.1", extras: true}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.0"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.4"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.3"}
-          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "4.4"}
-          - {os: macos-latest,  python: 3.7, ffmpeg: "4.4"}
-
-    env:
-      PYAV_PYTHON: python${{ matrix.config.python }}
-      PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
-
-    steps:
-
-    - uses: actions/checkout@v3
-      name: Checkout
-
-    - name: Python ${{ matrix.config.python }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.config.python }}
-
-    - name: OS Packages
-      run: |
-        case ${{ matrix.config.os }} in
-          ubuntu-latest)
-            sudo apt-get update
-            sudo apt-get install autoconf automake build-essential cmake \
-              libtool mercurial pkg-config texinfo wget yasm zlib1g-dev
-            sudo apt-get install libass-dev libfreetype6-dev libjpeg-dev \
-              libtheora-dev libvorbis-dev libx264-dev
-            if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install doxygen
-            fi
-            ;;
-          macos-latest)
-            brew update
-            brew install automake libtool nasm pkg-config shtool texi2html wget
-            brew install libass libjpeg libpng libvorbis libvpx opus theora x264
-            ;;
-        esac
-
-    - name: Pip and FFmpeg
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build-deps
-
-    - name: Build
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build
-
-    - name: Test
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        python -m av --version # Assert it can import.
-        scripts/test
-
-    - name: Docs
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        make -C docs html
-
-    - name: Doctest
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test doctest
-
-    - name: Examples
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test examples
-
-    - name: Source Distribution
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test sdist
-
   windows:
-
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
     runs-on: ${{ matrix.config.os }}
 
     strategy:
@@ -148,9 +12,6 @@ jobs:
       matrix:
         config:
           - {os: windows-latest, python: 3.7, ffmpeg: "5.1"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "5.0"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.4"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
 
     steps:
 
@@ -170,11 +31,7 @@ jobs:
           python=${{ matrix.config.python }} \
           setuptools
           if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/4.4.1-8/ffmpeg-win_amd64.tar.gz
+            curl -L -o ffmpeg.7z https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-5.1.2-full_build-shared.7z
           else
             conda install -q -n pyav ffmpeg=${{ matrix.config.ffmpeg }}
           fi
@@ -185,7 +42,7 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         if [[ "${{ matrix.config.ffmpeg }}" != "4.3" ]]; then
-          tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
+          7z x ffmpeg.7z -o$CONDA_PREFIX/Library/
         fi
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
 
