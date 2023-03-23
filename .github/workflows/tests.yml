@@ -52,3 +52,9 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         python setup.py test
+
+    - name: Upload built package
+      uses: actions/upload-artifact@v3
+      with:
+        name: av
+        path: av
